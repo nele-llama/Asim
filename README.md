@@ -6,7 +6,7 @@
 
 ## Instalation - SPM
 
-`link here`
+`https://github.com/nele-llama/Asim.git`
 
 ## Usage
 
