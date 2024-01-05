@@ -21,3 +21,8 @@ AsyncImageView(urlString: "https://some.url.to/image.jpg") {
 ```swift
 ImageInvalidator.shared.setInvalidationPeriod(.afterHours(4))
 ```
+
+- Manual invalidation
+```swift
+ImageInvalidator.shared.invalidate()
+```
