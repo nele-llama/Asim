@@ -7,18 +7,16 @@
 
 import Foundation
 
-public class ImageInvalidator {
-    private var invalidationPeriod = InvalidationPeriod.never {
-        didSet {
-            startInvalidationMonitoring()
-        }
-    }
+public final class ImageInvalidator {
     public static let shared = ImageInvalidator()
     private var invalidationList = [String: Date]()
     private var timer: Timer?
     private let concurrentQueue = DispatchQueue(label: "invalidation list write queue", attributes: .concurrent)
 
-    private init() {}
+    private init() {
+        guard AsimConfigurator.shared.invalidationPeriod != .never else { return }
+        startInvalidationMonitoring()
+    }
     
     deinit {
         timer?.invalidate()
@@ -26,10 +24,6 @@ public class ImageInvalidator {
     
     public func invalidate() {
         ImageCacher.shared.invalidate()
-    }
-    
-    public func setInvalidationPeriod(_ period: InvalidationPeriod) {
-        invalidationPeriod = period
     }
     
     func addInvalidationRecord(for key: String) {
@@ -51,7 +45,7 @@ private extension ImageInvalidator {
     }
     
     func calculateInvalidationPeriodInMinutes() -> Int {
-        switch invalidationPeriod {
+        switch AsimConfigurator.shared.invalidationPeriod {
         case .afterHours(let hours):
             return hours * 60
         case .afterMinutes(let minutes):
