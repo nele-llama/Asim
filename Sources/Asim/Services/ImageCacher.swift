@@ -10,18 +10,23 @@ import UIKit
 
 public final class ImageCacher {
     public static let shared = ImageCacher()
-    private var cacheType: CacheType
     private var cache = [String: Any]()
     private let concurrentQueue = DispatchQueue(label: "image cacher write queue", attributes: .concurrent)
     private lazy var cacheDirectoryUrl = URL.cachesDirectory.appending(path: "Images")
+    private var cacheType: CacheType = .inMemory {
+        didSet {
+            guard cacheType == .onDevice else { return }
+            try? FileManager.default.createDirectory(
+                at: cacheDirectoryUrl,
+                withIntermediateDirectories: false
+            )
+        }
+    }
     
-    private init() {
-        cacheType = AsimConfigurator.shared.cacheType
-        guard cacheType == .onDevice else { return }
-        try? FileManager.default.createDirectory(
-            at: cacheDirectoryUrl,
-            withIntermediateDirectories: false
-        )
+    private init() {}
+    
+    public func setCacheType(_ cacheType: CacheType) {
+        self.cacheType = cacheType
     }
     
     func getCashedImage(for key: String) -> UIImage? {
@@ -51,7 +56,7 @@ public final class ImageCacher {
         }
     }
     
-    public func invalidate() {
+    func invalidate() {
         concurrentQueue.async(flags: .barrier) { [unowned self] in
             switch cacheType {
             case .inMemory:
@@ -64,11 +69,10 @@ public final class ImageCacher {
                     withIntermediateDirectories: false
                 )
             }
-            
         }
     }
     
-    public func invalidateCache(for key: String) {
+    func invalidateCache(for key: String) {
         concurrentQueue.async(flags: .barrier) { [unowned self] in
             switch cacheType {
             case .inMemory:

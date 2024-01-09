@@ -12,14 +12,20 @@ public final class ImageInvalidator {
     private var invalidationList = [String: Date]()
     private var timer: Timer?
     private let concurrentQueue = DispatchQueue(label: "invalidation list write queue", attributes: .concurrent)
-
-    private init() {
-        guard AsimConfigurator.shared.invalidationPeriod != .never else { return }
-        startInvalidationMonitoring()
+    private var invalidationPeriod = InvalidationPeriod.never {
+        didSet {
+            startInvalidationMonitoring()
+        }
     }
+    
+    private init() {}
     
     deinit {
         timer?.invalidate()
+    }
+    
+    public func setInvalidationPeriod(_ period: InvalidationPeriod) {
+        invalidationPeriod = period
     }
     
     public func invalidate() {
@@ -45,7 +51,7 @@ private extension ImageInvalidator {
     }
     
     func calculateInvalidationPeriodInMinutes() -> Int {
-        switch AsimConfigurator.shared.invalidationPeriod {
+        switch invalidationPeriod {
         case .afterHours(let hours):
             return hours * 60
         case .afterMinutes(let minutes):
