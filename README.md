@@ -19,12 +19,12 @@ AsyncImageView(urlString: "https://some.url.to/image.jpg") {
 
 - Set cache type
 ```swift
-AsimConfigurator.shared.cacheType = .onDevice
+ImageCacher.shared.setCacheType(.onDevice)
 ```
 
 - Set invalidation period
 ```swift
-AsimConfigurator.shared.invalidationPeriod = .afterMinutes(2)
+ImageInvalidator.shared.setInvalidationPeriod(.afterHours(4))
 ```
 
 - Manual invalidation
