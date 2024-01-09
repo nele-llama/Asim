@@ -9,6 +9,6 @@ import Foundation
 
 public enum InvalidationPeriod: Equatable {
     case never
-    case afterHours(Int)
-    case afterMinutes(Int)
+    case afterHours(Double)
+    case afterMinutes(Double)
 }

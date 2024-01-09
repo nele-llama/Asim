@@ -9,7 +9,7 @@ import Foundation
 
 public final class ImageInvalidator {
     public static let shared = ImageInvalidator()
-    private var invalidationList = [String: Date]()
+    @UserStorage("invalidationList", defaultValue: [String: Date]()) private var invalidationList
     private var timer: Timer?
     private let concurrentQueue = DispatchQueue(label: "invalidation list write queue", attributes: .concurrent)
     private var invalidationPeriod = InvalidationPeriod.never {
@@ -50,7 +50,7 @@ private extension ImageInvalidator {
         startTimer(with: invalidationPeriodInMinutes)
     }
     
-    func calculateInvalidationPeriodInMinutes() -> Int {
+    func calculateInvalidationPeriodInMinutes() -> Double {
         switch invalidationPeriod {
         case .afterHours(let hours):
             return hours * 60
@@ -61,7 +61,7 @@ private extension ImageInvalidator {
         }
     }
     
-    func startTimer(with invalidationPeriodInMinutes: Int) {
+    func startTimer(with invalidationPeriodInMinutes: Double) {
         timer = Timer(timeInterval: 30, repeats: true) { _ in
             Task.detached { [weak self] in
                 self?.performInvalidation(with: invalidationPeriodInMinutes)
@@ -72,7 +72,7 @@ private extension ImageInvalidator {
         RunLoop.current.add(timer, forMode: .common)
     }
     
-    func performInvalidation(with invalidationPeriodInMinutes: Int) {
+    func performInvalidation(with invalidationPeriodInMinutes: Double) {
         invalidationList.forEach { key, value in
             if shouldInvalidate(candidate: value, invalidationPeriodInMinutes: invalidationPeriodInMinutes) {
                 ImageCacher.shared.invalidateCache(for: key)
@@ -83,8 +83,8 @@ private extension ImageInvalidator {
         }
     }
     
-    func shouldInvalidate(candidate: Date, invalidationPeriodInMinutes: Int) -> Bool {
-        Calendar.current.dateComponents([.minute], from: candidate, to: Date()).minute ?? 0 > invalidationPeriodInMinutes
+    func shouldInvalidate(candidate: Date, invalidationPeriodInMinutes: Double) -> Bool {
+        abs(candidate.timeIntervalSinceNow) / 60 > invalidationPeriodInMinutes
     }
 }
 

@@ -10,16 +10,12 @@ import UIKit
 
 public final class ImageCacher {
     public static let shared = ImageCacher()
-    private var cache = [String: Any]()
+    @UserStorage("cache", defaultValue: [String: Any]()) private var cache
     private let concurrentQueue = DispatchQueue(label: "image cacher write queue", attributes: .concurrent)
     private lazy var cacheDirectoryUrl = URL.cachesDirectory.appending(path: "Images")
-    private var cacheType: CacheType = .inMemory {
+    var cacheType: CacheType = .inMemory {
         didSet {
-            guard cacheType == .onDevice else { return }
-            try? FileManager.default.createDirectory(
-                at: cacheDirectoryUrl,
-                withIntermediateDirectories: false
-            )
+            setupFileManager()
         }
     }
     
@@ -82,6 +78,20 @@ public final class ImageCacher {
                 cache.removeValue(forKey: key)
                 try? FileManager.default.removeItem(at: cacheDirectoryUrl.appending(path: name))
             }
+        }
+    }
+}
+
+private extension ImageCacher {
+    func setupFileManager() {
+        switch cacheType {
+        case .inMemory:
+            try? FileManager.default.removeItem(at: cacheDirectoryUrl)
+        case .onDevice:
+            try? FileManager.default.createDirectory(
+                at: cacheDirectoryUrl,
+                withIntermediateDirectories: false
+            )
         }
     }
 }
